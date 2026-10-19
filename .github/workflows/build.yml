@@ -1,4 +1,5 @@
 
+
 name: Construir APK
 
 on:
@@ -19,6 +20,8 @@ jobs:
           java-version: '17'
 
       - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
 
       - name: Preparar proyecto
         run: |
@@ -26,12 +29,16 @@ jobs:
           sudo apt-get install -y unzip
           mkdir proyecto
           unzip MiCiudad3D_Android_proyecto.zip -d proyecto
-          find proyecto -name settings.gradle -print
+          find proyecto -name settings.gradle -o -name settings.gradle.kts
 
       - name: Compilar APK
         run: |
           cd proyecto
           DIR=$(find . -name settings.gradle -printf '%h\n' | head -n 1)
+          if [ -z "$DIR" ]; then
+            echo "No se encontró settings.gradle"
+            exit 1
+          fi
           cd "$DIR"
           gradle assembleDebug
 
