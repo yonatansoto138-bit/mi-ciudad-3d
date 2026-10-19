@@ -1,0 +1,42 @@
+
+name: Construir APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Preparar proyecto
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip
+          mkdir proyecto
+          unzip MiCiudad3D_Android_proyecto.zip -d proyecto
+          find proyecto -name settings.gradle -print
+
+      - name: Compilar APK
+        run: |
+          cd proyecto
+          DIR=$(find . -name settings.gradle -printf '%h\n' | head -n 1)
+          cd "$DIR"
+          gradle assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: Mi-Ciudad-3D-APK
+          path: proyecto/**/build/outputs/apk/debug/*.apk
